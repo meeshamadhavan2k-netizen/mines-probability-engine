@@ -1,27 +1,84 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mines Probability Simulator</title>
+<title>Mines Board Simulator</title>
+
+<style>
+body{
+  font-family: Arial;
+  text-align:center;
+}
+
+.board{
+  display:grid;
+  grid-template-columns:repeat(5,60px);
+  gap:5px;
+  justify-content:center;
+  margin-top:20px;
+}
+
+.tile{
+  width:60px;
+  height:60px;
+  font-size:20px;
+}
+</style>
+
 </head>
+
 <body>
 
-<h1>Mines Probability Simulator</h1>
+<h1>5×5 Mines Simulator</h1>
 
-<button onclick="run()">Run Simulation</button>
+<button onclick="newGame()">New Game</button>
 
-<p id="result"></p>
+<div class="board" id="board"></div>
 
 <script>
-function run() {
-  const totalTiles = 25;
-  const mines = 3;
 
-  const probability = ((totalTiles - mines) / totalTiles) * 100;
+const SIZE = 25;
+const MINES = 3;
 
-  document.getElementById("result").innerHTML =
-    "Safe first click probability: " +
-    probability.toFixed(2) + "%";
+let minePositions = [];
+
+function newGame(){
+
+  minePositions = [];
+
+  while(minePositions.length < MINES){
+    let r = Math.floor(Math.random()*25);
+
+    if(!minePositions.includes(r)){
+      minePositions.push(r);
+    }
+  }
+
+  const board = document.getElementById("board");
+  board.innerHTML = "";
+
+  for(let i=0;i<25;i++){
+
+    let btn = document.createElement("button");
+
+    btn.className = "tile";
+
+    btn.onclick = function(){
+
+      if(minePositions.includes(i)){
+        btn.innerHTML = "💣";
+        alert("Mine hit!");
+      }else{
+        btn.innerHTML = "✅";
+      }
+
+    };
+
+    board.appendChild(btn);
+  }
 }
+
+newGame();
+
 </script>
 
 </body>
