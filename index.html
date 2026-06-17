@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mines Advanced Simulator</title>
+<title>Mines Strategy Advisor</title>
 
 <style>
 body{
@@ -26,8 +26,9 @@ font-size:18px;
 cursor:pointer;
 }
 
-.stats{
-margin-top:15px;
+.box{
+margin-top:10px;
+font-size:18px;
 }
 </style>
 
@@ -35,18 +36,17 @@ margin-top:15px;
 
 <body>
 
-<h1>Advanced Mines Simulator</h1>
+<h1>Mines Strategy Advisor</h1>
 
 <h2 id="counter">Safe Clicks: 0</h2>
-<h3 id="prob">Next Click Survival: 100%</h3>
-<h3 id="mult">Multiplier: x1.00</h3>
+<h2 id="risk">Risk Level: LOW</h2>
+<h2 id="suggest">Suggestion: START GAME</h2>
 
 <button onclick="newGame()">New Game</button>
-<button onclick="runSimulation()">Run 10,000 Simulations</button>
 
 <div class="board" id="board"></div>
 
-<div class="stats" id="result"></div>
+<div class="box" id="info"></div>
 
 <script>
 
@@ -63,8 +63,9 @@ safeClicks = 0;
 gameOver = false;
 
 document.getElementById("counter").innerText = "Safe Clicks: 0";
-document.getElementById("prob").innerText = "Next Click Survival: 100%";
-document.getElementById("mult").innerText = "Multiplier: x1.00";
+document.getElementById("risk").innerText = "Risk Level: LOW";
+document.getElementById("suggest").innerText = "Suggestion: START GAME";
+document.getElementById("info").innerText = "";
 
 minePositions = [];
 
@@ -92,30 +93,20 @@ btn.disabled = true;
 if(minePositions.includes(i)){
 btn.innerHTML = "💣";
 gameOver = true;
-alert("Game Over!");
+
+document.getElementById("suggest").innerText =
+"Suggestion: GAME OVER";
+
 }else{
 btn.innerHTML = "✅";
 safeClicks++;
 
-// probability of next safe click
-let remainingSafe = (22 - safeClicks);
-let remainingTiles = (25 - safeClicks);
-let prob = (remainingSafe / remainingTiles) * 100;
-
-document.getElementById("counter").innerText =
-"Safe Clicks: " + safeClicks;
-
-document.getElementById("prob").innerText =
-"Next Click Survival: " + prob.toFixed(2) + "%";
-
-// simple multiplier model
-let mult = 1 + (safeClicks * 0.15);
-document.getElementById("mult").innerText =
-"Multiplier: x" + mult.toFixed(2);
+updateAdvisor();
 
 if(safeClicks === 22){
 gameOver = true;
-alert("You Win!");
+document.getElementById("suggest").innerText =
+"Suggestion: YOU WIN";
 }
 }
 
@@ -126,32 +117,47 @@ board.appendChild(btn);
 
 }
 
-function runSimulation(){
+function updateAdvisor(){
 
-let wins = 0;
-let trials = 10000;
+document.getElementById("counter").innerText =
+"Safe Clicks: " + safeClicks;
 
-for(let t=0;t<trials;t++){
+// remaining safe and total
+let remainingSafe = 22 - safeClicks;
+let remainingTiles = 25 - safeClicks;
 
-let tiles = Array.from({length:25}, (_,i)=>i);
-let mines = [];
+// probability next safe click
+let prob = (remainingSafe / remainingTiles);
 
-while(mines.length < 3){
-let r = Math.floor(Math.random()*25);
-if(!mines.includes(r)) mines.push(r);
+// risk calculation
+let risk = 1 - prob;
+
+let riskText = "";
+let suggestion = "";
+
+// risk zones
+if(safeClicks <= 5){
+riskText = "LOW";
+suggestion = "CONTINUE";
+}
+else if(safeClicks <= 12){
+riskText = "MEDIUM";
+suggestion = "CAUTION - consider cashout";
+}
+else{
+riskText = "HIGH";
+suggestion = "CASH OUT NOW";
 }
 
-// simulate 1 random click survival test
-let click = Math.floor(Math.random()*25);
+document.getElementById("risk").innerText =
+"Risk Level: " + riskText;
 
-if(!mines.includes(click)) wins++;
+document.getElementById("suggest").innerText =
+"Suggestion: " + suggestion;
 
-}
-
-let winRate = (wins/trials)*100;
-
-document.getElementById("result").innerHTML =
-"Simulation Win Rate (1 click): " + winRate.toFixed(2) + "%";
+document.getElementById("info").innerHTML =
+"Next Safe Chance: " + (prob*100).toFixed(2) + "%<br>" +
+"Risk of Mine: " + (risk*100).toFixed(2) + "%";
 
 }
 
