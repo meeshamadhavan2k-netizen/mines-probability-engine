@@ -1,34 +1,35 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mines Board Simulator</title>
+<title>Mines Simulator</title>
 
 <style>
 body{
-  font-family: Arial;
-  text-align:center;
+font-family:Arial;
+text-align:center;
 }
 
 .board{
-  display:grid;
-  grid-template-columns:repeat(5,60px);
-  gap:5px;
-  justify-content:center;
-  margin-top:20px;
+display:grid;
+grid-template-columns:repeat(5,60px);
+gap:5px;
+justify-content:center;
+margin-top:20px;
 }
 
 .tile{
-  width:60px;
-  height:60px;
-  font-size:20px;
+width:60px;
+height:60px;
+font-size:20px;
 }
 </style>
 
 </head>
-
 <body>
 
 <h1>5×5 Mines Simulator</h1>
+
+<h2 id="counter">Safe Clicks: 0</h2>
 
 <button onclick="newGame()">New Game</button>
 
@@ -40,41 +41,68 @@ const SIZE = 25;
 const MINES = 3;
 
 let minePositions = [];
+let safeClicks = 0;
 
 function newGame(){
 
-  minePositions = [];
+safeClicks = 0;
+document.getElementById("counter").innerHTML =
+"Safe Clicks: 0";
 
-  while(minePositions.length < MINES){
-    let r = Math.floor(Math.random()*25);
+minePositions = [];
 
-    if(!minePositions.includes(r)){
-      minePositions.push(r);
-    }
-  }
+while(minePositions.length < MINES){
 
-  const board = document.getElementById("board");
-  board.innerHTML = "";
+let r = Math.floor(Math.random()*25);
 
-  for(let i=0;i<25;i++){
+if(!minePositions.includes(r)){
+minePositions.push(r);
+}
 
-    let btn = document.createElement("button");
+}
 
-    btn.className = "tile";
+const board = document.getElementById("board");
+board.innerHTML = "";
 
-    btn.onclick = function(){
+for(let i=0;i<25;i++){
 
-      if(minePositions.includes(i)){
-        btn.innerHTML = "💣";
-        alert("Mine hit!");
-      }else{
-        btn.innerHTML = "✅";
-      }
+let btn = document.createElement("button");
 
-    };
+btn.className = "tile";
 
-    board.appendChild(btn);
-  }
+btn.onclick = function(){
+
+if(btn.disabled) return;
+
+btn.disabled = true;
+
+if(minePositions.includes(i)){
+
+btn.innerHTML = "💣";
+
+alert("Mine hit! Game Over");
+
+}else{
+
+btn.innerHTML = "✅";
+
+safeClicks++;
+
+document.getElementById("counter").innerHTML =
+"Safe Clicks: " + safeClicks;
+
+if(safeClicks === 22){
+alert("🏆 You Win!");
+}
+
+}
+
+};
+
+board.appendChild(btn);
+
+}
+
 }
 
 newGame();
