@@ -1,14 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>AI Mines Advisor</title>
+<title>Mines Simulator</title>
 
 <style>
 body{
 font-family:Arial;
 text-align:center;
-background:#111;
-color:white;
 }
 
 .board{
@@ -22,32 +20,20 @@ margin-top:20px;
 .tile{
 width:60px;
 height:60px;
-font-size:18px;
-cursor:pointer;
-}
-
-.box{
-margin-top:10px;
-font-size:15px;
+font-size:20px;
 }
 </style>
 
 </head>
-
 <body>
 
-<h1>AI Mines Strategy Advisor</h1>
+<h1>5×5 Mines Simulator</h1>
 
-<h2 id="safe">Safe Clicks: 0</h2>
-<h2 id="suggest">AI Suggestion: START</h2>
-<h2 id="best">Best Cashout Point: -</h2>
+<h2 id="counter">Safe Clicks: 0</h2>
 
 <button onclick="newGame()">New Game</button>
-<button onclick="runAI()">Run AI Simulation (5000 games)</button>
 
 <div class="board" id="board"></div>
-
-<div class="box" id="info"></div>
 
 <script>
 
@@ -56,24 +42,23 @@ const MINES = 3;
 
 let minePositions = [];
 let safeClicks = 0;
-let gameOver = false;
-
-// ---------------- GAME ----------------
 
 function newGame(){
 
 safeClicks = 0;
-gameOver = false;
-
-document.getElementById("safe").innerText = "Safe Clicks: 0";
-document.getElementById("suggest").innerText = "AI Suggestion: START";
-document.getElementById("best").innerText = "Best Cashout Point: -";
+document.getElementById("counter").innerHTML =
+"Safe Clicks: 0";
 
 minePositions = [];
 
 while(minePositions.length < MINES){
+
 let r = Math.floor(Math.random()*25);
-if(!minePositions.includes(r)) minePositions.push(r);
+
+if(!minePositions.includes(r)){
+minePositions.push(r);
+}
+
 }
 
 const board = document.getElementById("board");
@@ -82,122 +67,41 @@ board.innerHTML = "";
 for(let i=0;i<25;i++){
 
 let btn = document.createElement("button");
+
 btn.className = "tile";
 
 btn.onclick = function(){
 
-if(gameOver || btn.disabled) return;
+if(btn.disabled) return;
 
 btn.disabled = true;
 
 if(minePositions.includes(i)){
+
 btn.innerHTML = "💣";
-gameOver = true;
-document.getElementById("suggest").innerText = "AI: LOST ROUND";
+
+alert("Mine hit! Game Over");
+
 }else{
+
 btn.innerHTML = "✅";
+
 safeClicks++;
 
-updateAI(safeClicks);
+document.getElementById("counter").innerHTML =
+"Safe Clicks: " + safeClicks;
 
 if(safeClicks === 22){
-gameOver = true;
-document.getElementById("suggest").innerText = "AI: MAX WIN";
+alert("🏆 You Win!");
 }
+
 }
 
 };
 
 board.appendChild(btn);
-}
 
 }
-
-// ---------------- AI SIMULATION ----------------
-
-function simulateGame(stopAt){
-
-let mines = new Set();
-while(mines.size < 3){
-mines.add(Math.floor(Math.random()*25));
-}
-
-let safe = 0;
-
-for(let i=0;i<stopAt;i++){
-let pick = Math.floor(Math.random()*25);
-
-if(mines.has(pick)){
-return 0; // lost
-}
-safe++;
-}
-
-return 1 + (safe * 0.15); // fake multiplier model
-}
-
-// run AI learning
-function runAI(){
-
-let bestPoint = 0;
-let bestAvg = 0;
-
-for(let stop=1; stop<=22; stop++){
-
-let total = 0;
-let games = 5000;
-
-for(let i=0;i<games;i++){
-total += simulateGame(stop);
-}
-
-let avg = total / games;
-
-if(avg > bestAvg){
-bestAvg = avg;
-bestPoint = stop;
-}
-
-document.getElementById("info").innerHTML +=
-"Stop " + stop + " → Avg Return: " + avg.toFixed(2) + "x<br>";
-}
-
-document.getElementById("best").innerText =
-"Best Cashout Point: " + bestPoint + " clicks (" + bestAvg.toFixed(2) + "x)";
-
-document.getElementById("suggest").innerText =
-"AI Suggestion: CASH OUT AROUND " + bestPoint;
-
-}
-
-// ---------------- LIVE ADVISOR ----------------
-
-function updateAI(clicks){
-
-let remainingSafe = 22 - clicks;
-let remainingTiles = 25 - clicks;
-
-let pSafe = remainingSafe / remainingTiles;
-
-let risk = 1 - pSafe;
-
-let suggestion = "";
-
-if(clicks <= 5){
-suggestion = "SAFE ZONE - CONTINUE";
-}
-else if(clicks <= 12){
-suggestion = "MID RISK - WATCH CLOSELY";
-}
-else{
-suggestion = "HIGH RISK - CASH OUT SOON";
-}
-
-document.getElementById("safe").innerText =
-"Safe Clicks: " + clicks;
-
-document.getElementById("suggest").innerText =
-"AI Suggestion: " + suggestion;
 
 }
 
