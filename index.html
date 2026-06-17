@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Mines Strategy Advisor</title>
+<title>Pro Mines Advisor</title>
 
 <style>
 body{
@@ -28,7 +28,7 @@ cursor:pointer;
 
 .box{
 margin-top:10px;
-font-size:18px;
+font-size:16px;
 }
 </style>
 
@@ -36,11 +36,12 @@ font-size:18px;
 
 <body>
 
-<h1>Mines Strategy Advisor</h1>
+<h1>PRO Mines Strategy Advisor</h1>
 
-<h2 id="counter">Safe Clicks: 0</h2>
+<h2 id="safe">Safe Clicks: 0</h2>
 <h2 id="risk">Risk Level: LOW</h2>
-<h2 id="suggest">Suggestion: START GAME</h2>
+<h2 id="ev">Expected Value: 1.00x</h2>
+<h2 id="suggest">Suggestion: START</h2>
 
 <button onclick="newGame()">New Game</button>
 
@@ -62,18 +63,16 @@ function newGame(){
 safeClicks = 0;
 gameOver = false;
 
-document.getElementById("counter").innerText = "Safe Clicks: 0";
+document.getElementById("safe").innerText = "Safe Clicks: 0";
 document.getElementById("risk").innerText = "Risk Level: LOW";
-document.getElementById("suggest").innerText = "Suggestion: START GAME";
-document.getElementById("info").innerText = "";
+document.getElementById("ev").innerText = "Expected Value: 1.00x";
+document.getElementById("suggest").innerText = "Suggestion: START";
 
 minePositions = [];
 
 while(minePositions.length < MINES){
 let r = Math.floor(Math.random()*25);
-if(!minePositions.includes(r)){
-minePositions.push(r);
-}
+if(!minePositions.includes(r)) minePositions.push(r);
 }
 
 const board = document.getElementById("board");
@@ -93,20 +92,15 @@ btn.disabled = true;
 if(minePositions.includes(i)){
 btn.innerHTML = "💣";
 gameOver = true;
-
-document.getElementById("suggest").innerText =
-"Suggestion: GAME OVER";
-
+document.getElementById("suggest").innerText = "Suggestion: LOST";
 }else{
 btn.innerHTML = "✅";
 safeClicks++;
-
 updateAdvisor();
 
 if(safeClicks === 22){
 gameOver = true;
-document.getElementById("suggest").innerText =
-"Suggestion: YOU WIN";
+document.getElementById("suggest").innerText = "Suggestion: MAX WIN";
 }
 }
 
@@ -119,45 +113,52 @@ board.appendChild(btn);
 
 function updateAdvisor(){
 
-document.getElementById("counter").innerText =
+document.getElementById("safe").innerText =
 "Safe Clicks: " + safeClicks;
 
-// remaining safe and total
-let remainingSafe = 22 - safeClicks;
-let remainingTiles = 25 - safeClicks;
+// remaining calculation
+let safeRemaining = 22 - safeClicks;
+let tilesRemaining = 25 - safeClicks;
 
-// probability next safe click
-let prob = (remainingSafe / remainingTiles);
+// probability next safe
+let pSafe = safeRemaining / tilesRemaining;
 
-// risk calculation
-let risk = 1 - prob;
+// risk
+let risk = 1 - pSafe;
 
-let riskText = "";
-let suggestion = "";
+// EXPECTED VALUE MODEL (simple risk-adjusted)
+let multiplier = 1 + (safeClicks * 0.15);
+let ev = multiplier * pSafe;
 
 // risk zones
-if(safeClicks <= 5){
-riskText = "LOW";
+let riskLevel = "";
+let suggestion = "";
+
+if(pSafe > 0.85){
+riskLevel = "LOW";
 suggestion = "CONTINUE";
 }
-else if(safeClicks <= 12){
-riskText = "MEDIUM";
-suggestion = "CAUTION - consider cashout";
+else if(pSafe > 0.60){
+riskLevel = "MEDIUM";
+suggestion = "CONSIDER CASHOUT";
 }
 else{
-riskText = "HIGH";
+riskLevel = "HIGH";
 suggestion = "CASH OUT NOW";
 }
 
 document.getElementById("risk").innerText =
-"Risk Level: " + riskText;
+"Risk Level: " + riskLevel;
+
+document.getElementById("ev").innerText =
+"Expected Value: " + ev.toFixed(2) + "x";
 
 document.getElementById("suggest").innerText =
 "Suggestion: " + suggestion;
 
 document.getElementById("info").innerHTML =
-"Next Safe Chance: " + (prob*100).toFixed(2) + "%<br>" +
-"Risk of Mine: " + (risk*100).toFixed(2) + "%";
+"Next Safe Chance: " + (pSafe*100).toFixed(2) + "%<br>" +
+"Risk of Loss: " + (risk*100).toFixed(2) + "%";
 
 }
 
