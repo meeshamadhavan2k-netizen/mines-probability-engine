@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Pro Mines Advisor</title>
+<title>AI Mines Advisor</title>
 
 <style>
 body{
@@ -28,7 +28,7 @@ cursor:pointer;
 
 .box{
 margin-top:10px;
-font-size:16px;
+font-size:15px;
 }
 </style>
 
@@ -36,14 +36,14 @@ font-size:16px;
 
 <body>
 
-<h1>PRO Mines Strategy Advisor</h1>
+<h1>AI Mines Strategy Advisor</h1>
 
 <h2 id="safe">Safe Clicks: 0</h2>
-<h2 id="risk">Risk Level: LOW</h2>
-<h2 id="ev">Expected Value: 1.00x</h2>
-<h2 id="suggest">Suggestion: START</h2>
+<h2 id="suggest">AI Suggestion: START</h2>
+<h2 id="best">Best Cashout Point: -</h2>
 
 <button onclick="newGame()">New Game</button>
+<button onclick="runAI()">Run AI Simulation (5000 games)</button>
 
 <div class="board" id="board"></div>
 
@@ -58,15 +58,16 @@ let minePositions = [];
 let safeClicks = 0;
 let gameOver = false;
 
+// ---------------- GAME ----------------
+
 function newGame(){
 
 safeClicks = 0;
 gameOver = false;
 
 document.getElementById("safe").innerText = "Safe Clicks: 0";
-document.getElementById("risk").innerText = "Risk Level: LOW";
-document.getElementById("ev").innerText = "Expected Value: 1.00x";
-document.getElementById("suggest").innerText = "Suggestion: START";
+document.getElementById("suggest").innerText = "AI Suggestion: START";
+document.getElementById("best").innerText = "Best Cashout Point: -";
 
 minePositions = [];
 
@@ -92,15 +93,16 @@ btn.disabled = true;
 if(minePositions.includes(i)){
 btn.innerHTML = "💣";
 gameOver = true;
-document.getElementById("suggest").innerText = "Suggestion: LOST";
+document.getElementById("suggest").innerText = "AI: LOST ROUND";
 }else{
 btn.innerHTML = "✅";
 safeClicks++;
-updateAdvisor();
+
+updateAI(safeClicks);
 
 if(safeClicks === 22){
 gameOver = true;
-document.getElementById("suggest").innerText = "Suggestion: MAX WIN";
+document.getElementById("suggest").innerText = "AI: MAX WIN";
 }
 }
 
@@ -111,54 +113,91 @@ board.appendChild(btn);
 
 }
 
-function updateAdvisor(){
+// ---------------- AI SIMULATION ----------------
 
-document.getElementById("safe").innerText =
-"Safe Clicks: " + safeClicks;
+function simulateGame(stopAt){
 
-// remaining calculation
-let safeRemaining = 22 - safeClicks;
-let tilesRemaining = 25 - safeClicks;
-
-// probability next safe
-let pSafe = safeRemaining / tilesRemaining;
-
-// risk
-let risk = 1 - pSafe;
-
-// EXPECTED VALUE MODEL (simple risk-adjusted)
-let multiplier = 1 + (safeClicks * 0.15);
-let ev = multiplier * pSafe;
-
-// risk zones
-let riskLevel = "";
-let suggestion = "";
-
-if(pSafe > 0.85){
-riskLevel = "LOW";
-suggestion = "CONTINUE";
-}
-else if(pSafe > 0.60){
-riskLevel = "MEDIUM";
-suggestion = "CONSIDER CASHOUT";
-}
-else{
-riskLevel = "HIGH";
-suggestion = "CASH OUT NOW";
+let mines = new Set();
+while(mines.size < 3){
+mines.add(Math.floor(Math.random()*25));
 }
 
-document.getElementById("risk").innerText =
-"Risk Level: " + riskLevel;
+let safe = 0;
 
-document.getElementById("ev").innerText =
-"Expected Value: " + ev.toFixed(2) + "x";
+for(let i=0;i<stopAt;i++){
+let pick = Math.floor(Math.random()*25);
+
+if(mines.has(pick)){
+return 0; // lost
+}
+safe++;
+}
+
+return 1 + (safe * 0.15); // fake multiplier model
+}
+
+// run AI learning
+function runAI(){
+
+let bestPoint = 0;
+let bestAvg = 0;
+
+for(let stop=1; stop<=22; stop++){
+
+let total = 0;
+let games = 5000;
+
+for(let i=0;i<games;i++){
+total += simulateGame(stop);
+}
+
+let avg = total / games;
+
+if(avg > bestAvg){
+bestAvg = avg;
+bestPoint = stop;
+}
+
+document.getElementById("info").innerHTML +=
+"Stop " + stop + " → Avg Return: " + avg.toFixed(2) + "x<br>";
+}
+
+document.getElementById("best").innerText =
+"Best Cashout Point: " + bestPoint + " clicks (" + bestAvg.toFixed(2) + "x)";
 
 document.getElementById("suggest").innerText =
-"Suggestion: " + suggestion;
+"AI Suggestion: CASH OUT AROUND " + bestPoint;
 
-document.getElementById("info").innerHTML =
-"Next Safe Chance: " + (pSafe*100).toFixed(2) + "%<br>" +
-"Risk of Loss: " + (risk*100).toFixed(2) + "%";
+}
+
+// ---------------- LIVE ADVISOR ----------------
+
+function updateAI(clicks){
+
+let remainingSafe = 22 - clicks;
+let remainingTiles = 25 - clicks;
+
+let pSafe = remainingSafe / remainingTiles;
+
+let risk = 1 - pSafe;
+
+let suggestion = "";
+
+if(clicks <= 5){
+suggestion = "SAFE ZONE - CONTINUE";
+}
+else if(clicks <= 12){
+suggestion = "MID RISK - WATCH CLOSELY";
+}
+else{
+suggestion = "HIGH RISK - CASH OUT SOON";
+}
+
+document.getElementById("safe").innerText =
+"Safe Clicks: " + clicks;
+
+document.getElementById("suggest").innerText =
+"AI Suggestion: " + suggestion;
 
 }
 
